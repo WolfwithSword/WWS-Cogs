@@ -1,0 +1,19 @@
+{
+  "author": [
+    "WolfwithSword"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "Plays a simulation of the hunger games, based on https://brantsteele.net/hungergames/reaping.php and a modified version of https://github.com/DiamondIceNS/Hungrybot",
+  "hidden": true,
+  "install_msg": "Thank you for installing HungerGames Bot. Get started with `[p]load hungergames`, then `[p]help hg`",
+  "short": "Hunger Games bot",
+  "tags": [
+    "WolfwithSword",
+    "hunger games",
+    "game"
+  ]
+}
