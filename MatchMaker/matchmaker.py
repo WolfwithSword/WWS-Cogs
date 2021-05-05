@@ -330,7 +330,6 @@ class MatchMaker(commands.Cog):
             T1Players = lobby.Team1.Players
             T2Players = lobby.Team2.Players
 
-            print(T1Players)
             if not lobby.IsPlaying:
                 msg2 += "```No Teams Made\n```"
             elif len(T1Players) > 0 and len(T2Players) > 0:
