@@ -1,0 +1,23 @@
+{
+  "author": [
+    "WolfwithSword"
+  ],
+  "bot_version": [
+    3,
+    0,
+    0
+  ],
+  "description": "WIP cog for game matchmaking. Currently designed for tracking and supported Onward matches",
+  "hidden": true,
+  "install_msg": "Thank you for installing MatchMaker Bot. Get started with `[p]load MatchMaker`, then `[p]help mm`",
+  "short": "MatchMaker bot",
+  "tags": [
+    "WolfwithSword",
+    "matchmaker",
+    "teams"
+  ],
+  "requirements": [
+    "tabulate",
+    "sqlalchemy"
+  ]
+}

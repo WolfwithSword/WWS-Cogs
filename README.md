@@ -6,6 +6,10 @@
 ### HungerGames
 Runs a HungerGames Simulation. Type `[p]hg help` for more information.
 
+### MatchMaker
+A match making and ranking system for games. `[p]mm help` for more information.
+
+
 ## Installation
 
 To add the repo to gain access to my cogs:
@@ -14,4 +18,4 @@ To add the repo to gain access to my cogs:
 
 To install a specific cog:
 
-`[p]cog install WWS-Cogs <cog>`. Replace <cog> with your desired Cog, such as `HungerGames`
+`[p]cog install WWS-Cogs <cog>`. Replace <cog> with your desired Cog, such as `HungerGames` or `MatchMaker`

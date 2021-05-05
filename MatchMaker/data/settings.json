@@ -1,0 +1,27 @@
+{
+	"max_players": 6,
+	"ROLES": {
+		"BotCommander":3,
+		"BotDev":2,
+		"BotMod":1
+	},
+	"MAPS": {
+		"Default": [
+			"Bazaar (Day)",
+			"Bazaar (Night)",
+			"Cargo",
+			"Downfall (Day)",
+			"Downfall (Night)",
+			"Quarantine (Day)",
+			"Quarantine (Night)",
+			"Snowpeak (Day)",
+			"Snowpeak (Night)",
+			"Suburbia (Day)",
+			"Suburbia (Night)",
+			"Subway",
+			"USS Quest",
+			"Sand",
+			"Shipyard"
+			]
+	}
+}
