@@ -1,8 +1,8 @@
-from sqlalchemy import Column, ForeignKey, UniqueConstraint, CheckConstraint
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, ForeignKey, UniqueConstraint, CheckConstraint, case, func, cast
+from sqlalchemy.orm import relationship, backref, column_property
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.sqlite import INTEGER, TEXT, BOOLEAN
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects.sqlite import INTEGER, TEXT, BOOLEAN, FLOAT
+from sqlalchemy.ext.hybrid import hybrid_property, Comparator
 from enum import Enum
 from .enums import *
 
@@ -107,14 +107,34 @@ class Score(Base):
     Wins = Column(INTEGER, default=0)
     Losses = Column(INTEGER, default=0)
     GamesPlayed = Column(INTEGER, default=0)
-    
+    WinRate = Column("WinRate", FLOAT, default=0.0)
+
     @hybrid_property
     def WinRate(self):
         if self.GamesPlayed == 0:
             return 0.0
         else:
-            return self.Wins / self.GamesPlayed
-  
+            return float(self.Wins) / float(self.GamesPlayed)
+
+    @WinRate.expression
+    def WinRate(cls):
+        return case([(cls.GamesPlayed > 0, cast(cls.Wins, FLOAT) / cast(cls.GamesPlayed, FLOAT))], else_ = 0.0)
+
+    @WinRate.comparator
+    def WinRate(cls):
+        return WinRateComparator( cast(cls.Wins, FLOAT) / cast(cls.GamesPlayed, FLOAT) * 100.00)
+
+class WinRateComparator(Comparator):
+
+    def __eq__(self, other):
+        return self.__clause_element__() == other
+
+    def __gt__(self, other):
+        return self.__clause_element__() > other
+
+    def __lt__(self, other):
+        return self.__clause_element__() < other
+
 class Guild(Base):
     __tablename__ = 'guild'
     id = Column(INTEGER, primary_key=True, nullable=False, unique=True)

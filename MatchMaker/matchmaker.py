@@ -5,11 +5,11 @@ import webbrowser
 from redbot.core import commands
 from redbot.core import data_manager
 
-from random import shuffle, choice
+from random import shuffle, choice, randrange
 import json
 import traceback
 
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import any_
 
@@ -37,6 +37,7 @@ class MatchMaker(commands.Cog):
         # If table doesn't exist, Create the database
         if not inspect(engine).has_table('guild'):
             Base.metadata.create_all(engine)
+
 
         self.loadSettings()
 
@@ -380,7 +381,7 @@ class MatchMaker(commands.Cog):
                 await ctx.send("User {} has not registered in this server! Type {}register to start!".format(msg_user.name, ctx.clean_prefix + self.GROUP + " "))
                 return
             headers = ["Rank", "User", "Wins/Losses", "Games Played", "Win Rate"]
-            all_ranks = self.session.query(Score.UserID).filter(Score.GuildID == ctx.message.guild.id).order_by(Score.WinRate.desc()).all()
+            all_ranks = self.session.query(Score.UserID).filter(Score.GuildID == ctx.message.guild.id).order_by(desc(Score.WinRate)).all()
             all_ranks = [x[0] for x in all_ranks]
             rank = (all_ranks).index(user.UserID) +1
             rows = [[rank, msg_user.name, "{}/{}".format(user._Score.Wins, user._Score.Losses), user._Score.GamesPlayed, "{0:.2f}".format(user._Score.WinRate * 100) + "%"]]
@@ -398,10 +399,9 @@ class MatchMaker(commands.Cog):
         try:
             guildID = ctx.message.guild.id
 
-            scores = self.session.query(Score).filter(Score.GuildID == guildID).order_by( Score.WinRate.desc()).limit(25).all()
+            scores = self.session.query(Score).filter(Score.GuildID == guildID).order_by(desc(Score.WinRate)).limit(25).all()
             headers = ["Rank", "User", "Wins/Losses", "Games Played", "Win Rate"]
-            
-            rows = [("{}.".format(scores.index(s)+1), 
+            rows = [("{}.".format(scores.index(s)+1),
                 (self.bot.get_user(s.UserID)).name, "{}/{}".format(s.Wins, s.Losses),
                 s.GamesPlayed, "{0:.2f}".format(s.WinRate * 100) + "%") for s in scores]
             table = tabulate(rows, headers)
@@ -577,8 +577,6 @@ class MatchMaker(commands.Cog):
             await ctx.send('Could not complete your command')
             traceback.print_exc()
             print(e)
-
-
     
     @lobby.command(brief="Current Players in Active Lobby",
                  description="View the current players in the active lobby for this channel")
@@ -713,9 +711,73 @@ class MatchMaker(commands.Cog):
             traceback.print_exc()
             print(e)
 
-        
+    @mod.command(brief="Add Losses to a User (in case of missed or lost data)", aliases=['addlosses', 'addloss', 'addLoss'])
+    @commands.guild_only()
+    async def addLosses(self, ctx, user: discord.Member, amt:int):
+        if amt is None:
+            await ctx.send("Must enter in a valid number for losses to add to the user. Negative values are permitted unless it brings losses below 0")
+            return
+        if user is None or len(ctx.message.mentions) != 1:
+            await ctx.send("Please mention a single valid user")
+        try:
+
+            user = self.session.query(User).filter(User.GuildID == ctx.message.guild.id, User.UserID == int(ctx.message.mentions[0].id)).one_or_none()
+            if user is None:
+                await ctx.send("User {} has not registered yet!".format(ctx.message.mentions[0].name))
+                return
+            if(user._Score.GamesPlayed + amt < 0 or user._Score.Losses + amt < 0):
+                await ctx.send("Could not add losses as they would make total games played or losses negative")
+                return
+            user._Score.GamesPlayed += amt
+            user._Score.Losses += amt
+            self.session.commit()
+            await ctx.send("Successfully added losses to {}.".format(ctx.message.mentions[0].name))
+        except Exception as e:
+            await ctx.send("Could not complete your command")
+            traceback.print_exc()
+            print(e)
+
+    @mod.command(brief="Force-Register as a User",
+                 description="Force Register a user on the server")
+    @commands.guild_only()
+    async def forceregister(self, ctx, user: discord.Member):
+        discordID = user.id
+        guild = ctx.message.guild
+        try:
+            result = await self.registerUser(discordID, guild)
+            await ctx.send(result)
+        except Exception as e:
+            await ctx.send('Could not complete your command')
+            print(e)
+
+    @mod.command(brief="Add Wins to a User (in case of missed or lost data)", aliases=['addwins', 'addwin', 'addWin'])
+    @commands.guild_only()
+    async def addWins(self, ctx, user: discord.Member, amt:int):
+        if amt is None:
+            await ctx.send("Must enter in a valid number for wins to add to the user. Negative values are permitted unless it brings wins below 0")
+            return
+        if user is None or len(ctx.message.mentions) != 1:
+            await ctx.send("Please mention a single valid user")
+        try:
+
+            user = self.session.query(User).filter(User.GuildID == ctx.message.guild.id, User.UserID == int(ctx.message.mentions[0].id)).one_or_none()
+            if user is None:
+                await ctx.send("User {} has not registered yet!".format(ctx.message.mentions[0].name))
+                return
+            if(user._Score.GamesPlayed + amt < 0 or user._Score.Wins + amt < 0):
+                await ctx.send("Could not add wins as they would make total games played or wins negative")
+                return
+            user._Score.GamesPlayed += amt
+            user._Score.Wins += amt
+            self.session.commit()
+            await ctx.send("Successfully added wins to {}.".format(ctx.message.mentions[0].name))
+        except Exception as e:
+            await ctx.send("Could not complete your command")
+            traceback.print_exc()
+            print(e)
+
     @mod.command(brief="COM - Reset server stats, games, lobbies.",
-                 deescription="BotCommander only. Prunes all guild related data and resets player stats. It keeps blacklisted channels. Players will need to re-register.")
+                 description="BotCommander only. Prunes all guild related data and resets player stats. It keeps blacklisted channels. Players will need to re-register.")
     @commands.guild_only()
     async def wipe(self, ctx):
         allowed = False
